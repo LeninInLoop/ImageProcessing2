@@ -70,28 +70,19 @@ def nearest_neighbor_upsample(original_img, new_height=400, new_width=400):
 def bilinear_upsample(original_img, new_height=400, new_width=400):
     orig_height, orig_width = original_img.shape
 
-    # Generate indices for the new image dimensions
-    new_rows = np.arange(new_height)  # corresponds to y-coordinates
-    new_cols = np.arange(new_width)   # corresponds to x-coordinates
+    rows_new = np.arange(new_height); scale_factor_x = orig_width / new_width
+    cols_new = np.arange(new_width); scale_factor_y = orig_height / new_height
 
-    # Map the new coordinates to the original image space
-    y = new_rows * (orig_height / new_height)
-    x = new_cols * (orig_width / new_width)
+    x = rows_new * scale_factor_x; x1 = np.floor(x).astype(int); x2 = np.minimum(x1 + 1, orig_width - 1)
+    y = cols_new * scale_factor_y; y1 = np.floor(y).astype(int); y2 = np.minimum(y1 + 1, orig_height - 1)
 
-    # Get the integer parts and fractional parts
-    y1 = np.floor(y).astype(int)
-    y2 = np.minimum(y1 + 1, orig_height - 1)
-    x1 = np.floor(x).astype(int)
-    x2 = np.minimum(x1 + 1, orig_width - 1)
+    a = x - x1; b = y - y1
 
-    a = y - y1  # fractional part in y direction
-    b = x - x1  # fractional part in x direction
-
-    # Bilinear interpolation using advanced indexing
-    upsampled_img = (1 - a)[:, None] * (1 - b) * original_img[y1[:, None], x1] + \
-                    (1 - a)[:, None] * b       * original_img[y1[:, None], x2] + \
-                    a[:, None]       * (1 - b) * original_img[y2[:, None], x1] + \
-                    a[:, None]       * b       * original_img[y2[:, None], x2]
+    # Perform advanced indexing to create the upsampled image
+    upsampled_img = (1-a)[:,None]*(1-b)*original_img[x1[:,None], y1] + \
+                    a[:,None]*(1-b)*original_img[x2[:,None], y1] + \
+                    (1-a)[:,None]*b*original_img[x1[:,None], y2] + \
+                    a[:,None]*b*original_img[x2[:,None], y2]
 
     return upsampled_img
 
