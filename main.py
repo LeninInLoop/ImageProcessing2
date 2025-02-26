@@ -70,19 +70,28 @@ def nearest_neighbor_upsample(original_img, new_height=400, new_width=400):
 def bilinear_upsample(original_img, new_height=400, new_width=400):
     orig_height, orig_width = original_img.shape
 
-    rows_new = np.arange(new_height); scale_factor_x = orig_width / new_width
-    cols_new = np.arange(new_width); scale_factor_y = orig_height / new_height
+    # Generate indices for the new image dimensions
+    new_rows = np.arange(new_height)  # corresponds to y-coordinates
+    new_cols = np.arange(new_width)   # corresponds to x-coordinates
 
-    x = rows_new * scale_factor_x; x1 = np.floor(x).astype(int); x2 = np.minimum(x1 + 1, orig_width - 1)
-    y = cols_new * scale_factor_y; y1 = np.floor(y).astype(int); y2 = np.minimum(y1 + 1, orig_height - 1)
+    # Map the new coordinates to the original image space
+    y = new_rows * (orig_height / new_height)
+    x = new_cols * (orig_width / new_width)
 
-    a = x - x1; b = y - y1
+    # Get the integer parts and fractional parts
+    y1 = np.floor(y).astype(int)
+    y2 = np.minimum(y1 + 1, orig_height - 1)
+    x1 = np.floor(x).astype(int)
+    x2 = np.minimum(x1 + 1, orig_width - 1)
 
-    # Perform advanced indexing to create the upsampled image
-    upsampled_img = (1-a)[:,None]*(1-b)*original_img[x1[:,None], y1] + \
-                    a[:,None]*(1-b)*original_img[x2[:,None], y1] + \
-                    (1-a)[:,None]*b*original_img[x1[:,None], y2] + \
-                    a[:,None]*b*original_img[x2[:,None], y2]
+    a = y - y1  # fractional part in y direction
+    b = x - x1  # fractional part in x direction
+
+    # Bilinear interpolation using advanced indexing
+    upsampled_img = (1 - a)[:, None] * (1 - b) * original_img[y1[:, None], x1] + \
+                    (1 - a)[:, None] * b       * original_img[y1[:, None], x2] + \
+                    a[:, None]       * (1 - b) * original_img[y2[:, None], x1] + \
+                    a[:, None]       * b       * original_img[y2[:, None], x2]
 
     return upsampled_img
 
@@ -101,8 +110,9 @@ def main():
     print(50*"-", "\nUpsampled Image Array(N.N):\n", upsampled_image_nn)
 
     upsampled_image_bl = bilinear_upsample(image_array)
-    save_image_array_as_tiff(upsampled_image_bl, image_name="upsampled_image_bl.tiff")
+    save_image_array_as_tiff(upsampled_image_bl.astype(np.uint8), image_name="upsampled_image_bl.tiff")
     print(50 * "-", "\nUpsampled Image Array(Bilinear):\n", upsampled_image_bl)
+    print(50 * "-", "\nUpsampled Image Array(Bilinear-uint8):\n", upsampled_image_bl.astype(np.uint8))
 
     plot_images_by_size(
         original_image=image_array,
