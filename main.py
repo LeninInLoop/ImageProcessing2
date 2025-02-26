@@ -86,24 +86,31 @@ def bilinear_upsample(original_img, new_height=400, new_width=400):
 
     return upsampled_img
 
+def save_image_array_as_tiff(image_array: np.ndarray, image_name: str = "image.tiff") -> None:
+    image = Image.fromarray(image_array)
+    image.save(image_name)
+    return print(50*"-",f"\nImage Saved as {image_name}")
+
 def main():
     image_path = r"C:\Users\ADIB\Desktop\Image Processing\2\Adib_Nikjou_403114114_DIP_2\Images\cameraman.bmp"
     image_array = load_image_as_array(image_path)
 
     print(50*"-", "\nImage Array:\n", image_array)
     upsampled_image_nn = nearest_neighbor_upsample(image_array)
+    save_image_array_as_tiff(upsampled_image_nn, image_name="upsampled_image_nn.tiff")
     print(50*"-", "\nUpsampled Image Array(N.N):\n", upsampled_image_nn)
 
     upsampled_image_bl = bilinear_upsample(image_array)
+    save_image_array_as_tiff(upsampled_image_bl, image_name="upsampled_image_bl.tiff")
     print(50 * "-", "\nUpsampled Image Array(Bilinear):\n", upsampled_image_bl)
 
     plot_images_by_size(
         original_image=image_array,
         upsampled_images=[upsampled_image_nn, upsampled_image_bl],
-        save_path = "Upsampled_images.png",
+        save_path = "Upsampled_images.tiff",
         titles = ["Original Image", "Upsampled Image(NN)", "Upsampled Image(Bilinear)"],
     )
-    print(50 * "-", "\nUpsampled and Original images are saved as: ", "./Upsampled_images.png")
+    print(50 * "-", "\nUpsampled and Original images are saved as: ", "./Upsampled_images.tiff")
 
 if __name__ == '__main__':
     main()
